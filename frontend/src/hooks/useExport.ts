@@ -1,7 +1,7 @@
-import { createSignal } from 'solid-js';
-import { UnsciiConverter, ExportParams } from 'unscii-converter-core';
+import { createSignal, Accessor } from 'solid-js';
+import { UnsciiConverter, ExportParams, AsciiGrid } from 'unscii-converter-core';
 
-export function useExport(converter: () => UnsciiConverter | null) {
+export function useExport(converter: () => UnsciiConverter | null, gridSignal: Accessor<AsciiGrid | null>) {
   const [downloading, setDownloading] = createSignal(false);
 
   const downloadBlob = (blob: Blob, filename: string) => {
@@ -17,11 +17,13 @@ export function useExport(converter: () => UnsciiConverter | null) {
 
   const exportAll = async (params: ExportParams) => {
     const conv = converter();
+    const grid = gridSignal();
     if (!conv) throw new Error('Converter not ready');
+    if (!grid) throw new Error('No converted image to export');
     
     setDownloading(true);
     try {
-      const result = conv.export(null!, params);
+      const result = conv.export(grid, params);
       
       // Download all formats
       downloadBlob(new Blob([result.png], { type: 'image/png' }), 'unscii.png');

@@ -4,7 +4,7 @@ import { useImage } from './hooks/useImage';
 import { useWebGL } from './hooks/useWebGL';
 import { useExport } from './hooks/useExport';
 import { params, setParams } from './stores/params';
-import { ConvertParams } from 'unscii-converter-core';
+import { ConvertParams, AsciiGrid, ExportParams } from 'unscii-converter-core';
 import { FontVariant } from 'unscii-converter-core';
 import Canvas from './components/Canvas';
 import ControlPanel from './components/ControlPanel';
@@ -26,8 +26,10 @@ export default function App() {
     error: glError,
     uploadAtlas 
   } = useWebGL();
-  // Pass the converter signal to useExport (it will call it internally)
-  const { exportAll, downloading } = useExport(converter);
+  // Store last converted grid for export
+  const [lastGrid, setLastGrid] = createSignal<AsciiGrid | null>(null);
+  // Pass converter and grid signals to useExport
+  const { exportAll, downloading } = useExport(converter, lastGrid);
 
   const handleFileLoad = async (file: File) => {
     console.log('handleFileLoad called with:', file);
@@ -93,6 +95,7 @@ export default function App() {
       const glyphHeight = atlasSize[1];
       console.log('Glyph dimensions:', glyphWidth, 'x', glyphHeight);
       renderFrame(grid, glyphWidth, glyphHeight);
+      setLastGrid(grid); // Store for export
       setStatusMessage(`Converted: ${grid.cols()}×${grid.rows()} cells`);
     } catch (e) {
       setStatusMessage(`Error: ${e instanceof Error ? e.message : 'Conversion failed'}`);
@@ -161,7 +164,18 @@ export default function App() {
     if (!conv || !ready()) return;
     try {
       setStatusMessage('Exporting...');
-      await exportAll(exportParams);
+      // Create proper ExportParams from UI values
+      const wasmExportParams = new ExportParams();
+      wasmExportParams.webp_quality = exportParams.webpQuality ?? 85;
+      wasmExportParams.webp_lossless = exportParams.webpLossless ?? false;
+      wasmExportParams.html_fg = exportParams.htmlFg ?? '#ffffff';
+      wasmExportParams.html_bg = exportParams.htmlBg ?? '#000000';
+      wasmExportParams.html_font = exportParams.htmlFont ?? "'Unscii', monospace";
+      wasmExportParams.html_line_height = exportParams.htmlLineHeight ?? 1.1;
+      wasmExportParams.html_font_size = exportParams.htmlFontSize ?? 12;
+      wasmExportParams.ansi_fg = exportParams.ansiFg ?? 0xFFFFFFFF;
+      wasmExportParams.ansi_bg = exportParams.ansiBg ?? 0x000000FF;
+      await exportAll(wasmExportParams);
       setShowExport(false);
       setStatusMessage('Export complete!');
     } catch (e) {
