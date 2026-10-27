@@ -1,5 +1,5 @@
 import { createSignal } from 'solid-js';
-import { params, setParams, DITHER_ALGORITHMS, FONT_VARIANTS, COLOR_MODES, ALPHA_MODES, PALETTE_PRESETS, applyPalettePreset } from '../stores/params';
+import { params, setParams, DITHER_ALGORITHMS, FONT_VARIANTS, COLOR_MODES, PALETTE_PRESETS, applyPalettePreset } from '../stores/params';
 
 export default function ControlPanel(props: {
   params: any;
@@ -108,17 +108,6 @@ export default function ControlPanel(props: {
             </label>
 
             <label>
-              <span>Alpha Mode</span>
-              <select
-                value={props.params.alphaMode}
-                onChange={e => props.setParams('alphaMode', parseInt(e.currentTarget.value))}
-                disabled={props.disabled}
-              >
-                {ALPHA_MODES.map(a => <option value={a.value}>{a.label}</option>)}
-              </select>
-            </label>
-
-            <label>
               <span>Contrast: {props.params.contrast.toFixed(2)}</span>
               <input
                 type="range"
@@ -211,59 +200,6 @@ export default function ControlPanel(props: {
 
         {activeTab() === 'advanced' && (
           <div class="section">
-            <h4>CRT Effects</h4>
-            
-            <label class="checkbox">
-              <input
-                type="checkbox"
-                checked={props.params.crtScanlines}
-                onChange={e => props.setParams('crtScanlines', e.currentTarget.checked)}
-                disabled={props.disabled}
-              />
-              <span>Scanlines</span>
-            </label>
-
-            <label>
-              <span>Curvature: {props.params.crtCurvature.toFixed(2)}</span>
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.01"
-                value={props.params.crtCurvature}
-                onInput={e => props.setParams('crtCurvature', parseFloat(e.currentTarget.value))}
-                disabled={props.disabled}
-              />
-            </label>
-
-            <label>
-              <span>Bloom: {props.params.crtBloom.toFixed(2)}</span>
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.01"
-                value={props.params.crtBloom}
-                onInput={e => props.setParams('crtBloom', parseFloat(e.currentTarget.value))}
-                disabled={props.disabled}
-              />
-            </label>
-
-            <label>
-              <span>Vignette: {props.params.crtVignette.toFixed(2)}</span>
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.01"
-                value={props.params.crtVignette}
-                onInput={e => props.setParams('crtVignette', parseFloat(e.currentTarget.value))}
-                disabled={props.disabled}
-              />
-            </label>
-
-            <hr />
-
             <label>
               <span>Target Width: {props.params.targetWidth || 'Auto'}px</span>
               <input

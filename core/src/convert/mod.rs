@@ -5,11 +5,9 @@ pub mod grid;
 
 use crate::convert::mapper::map_luma_to_glyphs;
 pub use crate::convert::grid::AsciiGrid;
-use crate::convert::grid::AsciiGrid as _;
 use crate::font::atlas::FontAtlas;
-use crate::font::variants::FontVariant;
 use crate::dither::apply_dither;
-use crate::image::ImageProcessor;
+use crate::image::{ImageProcessor, luminance::{rgba_to_luma, AlphaMode}};
 use wasm_bindgen::prelude::*;
 
 /// Main conversion function
@@ -26,10 +24,15 @@ pub fn convert_image(
         processor.resize(params.target_width);
     }
     
-    // Get luma buffer
-    let luma = processor.luma();
+    // Get RGBA buffer
+    let rgba = processor.rgba();
     let width = processor.width();
     let height = processor.height();
+    
+    // Compute luma with alpha handling
+    let alpha_mode = AlphaMode::from(params.alpha_mode);
+    let bg_color = [0u8, 0u8, 0u8]; // Black background
+    let luma = rgba_to_luma(&rgba, width, height, alpha_mode, bg_color);
     
     // Apply dithering (output to separate buffer)
     let mut dithered = vec![0u8; (width * height) as usize];
@@ -47,10 +50,13 @@ pub fn convert_image(
     let cell_size = params.cell_size.max(1.0);
     let mut grid = map_luma_to_glyphs(&dithered, width, height, cell_size, params.threshold)?;
     
-    // Render to RGBA for preview (using font atlas)
-    let rgba = render_grid_to_rgba(&grid, font_atlas, cell_size, processor.rgba().as_slice(), width, height, params.color_mode, &params.palette, params.palette_size as usize)?;
+    // Set glyph dimensions from font atlas
+    grid = grid.with_glyph_size(font_atlas.glyph_width, font_atlas.glyph_height);
     
-    grid.set_rgba(rgba);
+    // Render to RGBA for preview (using font atlas)
+    let rgba_out = render_grid_to_rgba(&grid, font_atlas, cell_size, &rgba, width, height, params.color_mode, &params.palette, params.palette_size as usize)?;
+    
+    grid.set_rgba(rgba_out);
     Ok(grid)
 }
 

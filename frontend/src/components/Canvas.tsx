@@ -1,17 +1,33 @@
-import { createSignal, onMount, onCleanup } from 'solid-js';
+import { onMount, onCleanup } from 'solid-js';
 
-export default function Canvas(props: { ref: (el: HTMLCanvasElement) => void }) {
-  const [size, setSize] = createSignal({ width: 800, height: 600 });
+export interface CanvasProps {
+  ref: (el: HTMLCanvasElement) => void;
+  onResize?: () => void;
+}
+
+export default function Canvas(props: CanvasProps) {
+  let canvasEl: HTMLCanvasElement | null = null;
 
   onMount(() => {
     const updateSize = () => {
-      const canvas = document.querySelector('canvas');
-      if (canvas) {
-        const rect = canvas.getBoundingClientRect();
+      if (canvasEl) {
+        const rect = canvasEl.getBoundingClientRect();
         const dpr = window.devicePixelRatio || 1;
-        setSize({ width: rect.width * dpr, height: rect.height * dpr });
+        const newWidth = Math.round(rect.width * dpr);
+        const newHeight = Math.round(rect.height * dpr);
+        
+        if (canvasEl.width !== newWidth || canvasEl.height !== newHeight) {
+          canvasEl.width = newWidth;
+          canvasEl.height = newHeight;
+        }
+        
+        // Trigger redraw after size update
+        if (props.onResize) {
+          props.onResize();
+        }
       }
     };
+    
     updateSize();
     window.addEventListener('resize', updateSize);
     onCleanup(() => window.removeEventListener('resize', updateSize));
@@ -19,10 +35,11 @@ export default function Canvas(props: { ref: (el: HTMLCanvasElement) => void }) 
 
   return (
     <canvas
-      ref={props.ref}
+      ref={(el) => {
+        canvasEl = el;
+        props.ref(el);
+      }}
       class="canvas"
-      width={size().width}
-      height={size().height}
       style={{ width: '100%', height: '100%' }}
     />
   );

@@ -1,7 +1,5 @@
 //! Color palettes for multi-color dithering
 
-use std::collections::HashMap;
-
 /// Predefined color palettes (packed RGBA u32)
 pub const PALETTES: &[(&str, &[u32])] = &[
     // Monochrome
@@ -80,27 +78,46 @@ pub fn unpack_rgba(packed: u32) -> (u8, u8, u8, u8) {
 }
 
 /// Convert hex color string to packed RGBA
-pub fn hex_to_rgba(hex: &str) -> Option<u32> {
-    let hex = hex.trim_start_matches('#');
-    if hex.len() != 6 && hex.len() != 8 { return None; }
-    let r = u8::from_str_radix(&hex[0..2], 16).ok()?;
-    let g = u8::from_str_radix(&hex[2..4], 16).ok()?;
-    let b = u8::from_str_radix(&hex[4..6], 16).ok()?;
-    let a = if hex.len() == 8 {
-        u8::from_str_radix(&hex[6..8], 16).ok()?
-    } else { 255 };
-    Some(pack_rgba(r, g, b, a))
-}
-
 /// Parse comma-separated hex colors into palette
-pub fn parse_palette(colors: &str) -> Vec<u32> {
-    colors.split(',')
-        .filter_map(|s| hex_to_rgba(s.trim()))
-        .collect()
-}
 
 #[cfg(test)]
+mod test_utils {
+    use super::*;
+
+    /// Parse hex color string to RGBA u32 (test utility)
+    pub fn hex_to_rgba(hex: &str) -> Option<u32> {
+        let hex = hex.trim_start_matches('#');
+        let (r, g, b, a) = if hex.len() == 6 {
+            (
+                u8::from_str_radix(&hex[0..2], 16).ok()?,
+                u8::from_str_radix(&hex[2..4], 16).ok()?,
+                u8::from_str_radix(&hex[4..6], 16).ok()?,
+                255,
+            )
+        } else if hex.len() == 8 {
+            (
+                u8::from_str_radix(&hex[0..2], 16).ok()?,
+                u8::from_str_radix(&hex[2..4], 16).ok()?,
+                u8::from_str_radix(&hex[4..6], 16).ok()?,
+                u8::from_str_radix(&hex[6..8], 16).ok()?,
+            )
+        } else {
+            return None;
+        };
+        Some(pack_rgba(r, g, b, a))
+    }
+
+    /// Parse comma-separated hex colors into palette (test utility)
+    pub fn parse_palette(colors: &str) -> Vec<u32> {
+        colors.split(',')
+            .filter_map(|s| hex_to_rgba(s.trim()))
+            .collect()
+    }
+}
+#[cfg(test)]
 mod tests {
+    use crate::dither::palette::test_utils::{hex_to_rgba, parse_palette};
+
     use super::*;
 
     #[test]

@@ -123,7 +123,7 @@ export default function ExportModal(props: {
               <span>Foreground</span>
               <input
                 type="color"
-                value={`#${(exportParams().ansiFg >>> 0).toString(16).padStart(6, '0')}`}
+                value={`#${(exportParams().ansiFg >> 8).toString(16).padStart(6, '0')}`}
                 onChange={e => setExportParams(p => ({ ...p, ansiFg: parseInt(e.currentTarget.value.slice(1) + 'FF', 16) }))}
               />
             </label>
@@ -131,7 +131,7 @@ export default function ExportModal(props: {
               <span>Background</span>
               <input
                 type="color"
-                value={`#${(exportParams().ansiBg >>> 0).toString(16).padStart(6, '0')}`}
+                value={`#${(exportParams().ansiBg >> 8).toString(16).padStart(6, '0')}`}
                 onChange={e => setExportParams(p => ({ ...p, ansiBg: parseInt(e.currentTarget.value.slice(1) + 'FF', 16) }))}
               />
             </label>

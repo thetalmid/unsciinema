@@ -65,6 +65,7 @@ export default function FileDrop(props: {
         class="file-input"
         disabled={props.disabled}
         id="file-input"
+        data-testid="file-input"
       />
       <label for="file-input" class="drop-label">
         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">

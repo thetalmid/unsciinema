@@ -23,8 +23,7 @@ export default function App() {
     renderFrame, 
     resizeCanvas,
     gl,
-    error: glError,
-    uploadAtlas 
+    error: glError
   } = useWebGL();
   // Store last converted grid for export
   const [lastGrid, setLastGrid] = createSignal<AsciiGrid | null>(null);
@@ -43,7 +42,11 @@ export default function App() {
     setStatusMessage(`Loading ${file.name}...`);
     try {
       const arrayBuffer = await file.arrayBuffer();
-      await loadImage(new Uint8Array(arrayBuffer));
+      const bytes = new Uint8Array(arrayBuffer);
+      // Load and decode image once in WASM
+      conv.load_image(bytes);
+      // Also store locally for UI state
+      await loadImage(bytes, file.name);
       setStatusMessage(`Loaded ${file.name} - ready to convert`);
     } catch (e) {
       setStatusMessage(`Error: ${e instanceof Error ? e.message : 'Failed to load'}`);
@@ -87,7 +90,8 @@ export default function App() {
       wasmParams.crt_curvature = p.crtCurvature;
       wasmParams.crt_bloom = p.crtBloom;
       wasmParams.crt_vignette = p.crtVignette;
-      const result = conv.convert(imageData(), wasmParams);
+      // Use convert_loaded which skips decoding (image already loaded in WASM)
+      const result = conv.convert_loaded(wasmParams);
       const grid = result instanceof Promise ? await result : result;
       // Get glyph dimensions from converter's font atlas
       const atlasSize = getFontAtlasSize ? getFontAtlasSize() : [128, 8];
@@ -173,6 +177,12 @@ export default function App() {
       wasmExportParams.html_font = exportParams.htmlFont ?? "'Unscii', monospace";
       wasmExportParams.html_line_height = exportParams.htmlLineHeight ?? 1.1;
       wasmExportParams.html_font_size = exportParams.htmlFontSize ?? 12;
+      // Font data for embedded HTML export (base64 WOFF)
+      wasmExportParams.html_font_base64 = ""; // TODO: get from converter
+      wasmExportParams.html_font_format = "woff";
+      // Get current font variant
+      const variantNames = ["Unscii8", "Unscii8Alt", "Unscii8Fantasy", "Unscii8Mcr", "Unscii8Tall", "Unscii8Thin", "Unscii16"];
+      wasmExportParams.html_font_variant = variantNames[params.fontVariant] || "Unscii8";
       wasmExportParams.ansi_fg = exportParams.ansiFg ?? 0xFFFFFFFF;
       wasmExportParams.ansi_bg = exportParams.ansiBg ?? 0x000000FF;
       await exportAll(wasmExportParams);
@@ -198,7 +208,7 @@ export default function App() {
       
       <main class="main">
         <div class="workspace">
-          <Canvas ref={canvasRef} />
+          <Canvas ref={canvasRef} onResize={() => doConvert()} />
           <ControlPanel 
             params={params} 
             setParams={setParams}

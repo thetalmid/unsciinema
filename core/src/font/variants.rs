@@ -1,6 +1,5 @@
 //! unscii font variants and their embedded .hex data
 
-use crate::font::parser::Glyph;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
@@ -80,17 +79,6 @@ pub const CHAR_RAMP_BLOCKS: [char; 16] = [
 pub const CHAR_RAMP_BRAILLE: [char; 16] = [
     '⠀', '⠁', '⠃', '⠇', '⠏', '⠟', '⠿', '⠿', '⠿', '⠿', '⠿', '⠿', '⠿', '⠿', '⠿', '⠿',
 ];
-
-pub fn get_ramp_glyphs(all_glyphs: &std::collections::HashMap<char, Glyph>) -> Vec<Glyph> {
-    CHAR_RAMP.iter()
-        .map(|&ch| all_glyphs.get(&ch).cloned().unwrap_or_else(|| Glyph {
-            codepoint: ch,
-            width: 8,
-            height: 8,
-            data: vec![0u8; 8],
-        }))
-        .collect()
-}
 
 #[cfg(test)]
 mod tests {

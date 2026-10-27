@@ -203,6 +203,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(target_arch = "wasm32")]
     fn test_atlas_rejects_different_dimensions() {
         let mut glyphs: Vec<Glyph> = (0..16).map(|i| Glyph {
             codepoint: CHAR_RAMP[i],

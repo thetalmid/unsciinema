@@ -5,7 +5,7 @@ pub mod luminance;
 pub mod preprocessing;
 
 use crate::image::loader::load_image;
-use crate::image::luminance::rgba_to_luma;
+use crate::image::luminance::rgba_to_luma_default;
 use crate::image::preprocessing::{apply_contrast, apply_gamma, resize_image};
 use image::DynamicImage;
 use wasm_bindgen::prelude::*;
@@ -24,7 +24,7 @@ impl ImageProcessor {
     pub fn new(image_bytes: &[u8]) -> Result<ImageProcessor, JsValue> {
         let img = load_image(image_bytes)?;
         let (rgba, width, height) = image_to_rgba(&img);
-        let luma = rgba_to_luma(&rgba, width, height);
+        let luma = rgba_to_luma_default(&rgba, width, height);
         Ok(ImageProcessor { rgba, width, height, luma })
     }
 
@@ -45,7 +45,7 @@ impl ImageProcessor {
         apply_contrast(&mut self.rgba, contrast);
         apply_gamma(&mut self.rgba, gamma);
         // Recompute luma after preprocessing
-        self.luma = rgba_to_luma(&self.rgba, self.width, self.height);
+        self.luma = rgba_to_luma_default(&self.rgba, self.width, self.height);
     }
 
     #[wasm_bindgen]
@@ -59,7 +59,7 @@ impl ImageProcessor {
         self.rgba = rgba;
         self.width = w;
         self.height = h;
-        self.luma = rgba_to_luma(&self.rgba, self.width, self.height);
+        self.luma = rgba_to_luma_default(&self.rgba, self.width, self.height);
     }
 }
 

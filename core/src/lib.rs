@@ -32,6 +32,8 @@ pub fn init() {
 pub struct UnsciiConverter {
     font_atlas: FontAtlas,
     font_variant: FontVariant,
+    image_processor: Option<image::ImageProcessor>,
+    max_file_size: usize,
 }
 
 #[wasm_bindgen]
@@ -51,7 +53,12 @@ impl UnsciiConverter {
         };
         
         let font_atlas = load_font_variant(font_variant)?;
-        Ok(UnsciiConverter { font_atlas, font_variant })
+        Ok(UnsciiConverter { 
+            font_atlas, 
+            font_variant, 
+            image_processor: None,
+            max_file_size: 50 * 1024 * 1024, // 50 MB default
+        })
     }
 
     /// Get font atlas as RGBA bytes for GPU upload (128×8 = 4096 bytes)
@@ -78,7 +85,29 @@ impl UnsciiConverter {
         self.font_variant as u32
     }
 
-    /// Convert image to ASCII grid with current parameters
+    /// Load and decode image once, store for repeated conversions
+    #[wasm_bindgen]
+    pub fn load_image(&mut self, image_bytes: &[u8]) -> Result<(), JsValue> {
+        if image_bytes.len() > self.max_file_size {
+            return Err(JsValue::from_str(&format!(
+                "File too large: {} bytes (max: {} bytes)",
+                image_bytes.len(), self.max_file_size
+            )));
+        }
+        let processor = ImageProcessor::new(image_bytes)?;
+        self.image_processor = Some(processor);
+        Ok(())
+    }
+
+    /// Convert using already-loaded image (decoding skipped)
+    #[wasm_bindgen]
+    pub fn convert_loaded(&mut self, params: &ConvertParams) -> Result<AsciiGrid, JsValue> {
+        let processor = self.image_processor.as_mut()
+            .ok_or_else(|| JsValue::from_str("No image loaded. Call load_image() first."))?;
+        convert_image(processor, params, &self.font_atlas)
+    }
+
+    /// Convert image to ASCII grid with current parameters (legacy: decodes each time)
     /// Returns AsciiGrid with glyph indices and rendered RGBA
     #[wasm_bindgen]
     pub fn convert(
@@ -88,6 +117,12 @@ impl UnsciiConverter {
     ) -> Result<AsciiGrid, JsValue> {
         let mut processor = ImageProcessor::new(image_bytes)?;
         convert_image(&mut processor, params, &self.font_atlas)
+    }
+
+    /// Set maximum file size for load_image (in bytes)
+    #[wasm_bindgen]
+    pub fn set_max_file_size(&mut self, bytes: usize) {
+        self.max_file_size = bytes;
     }
 
     /// Export current result to multiple formats
@@ -102,20 +137,20 @@ impl UnsciiConverter {
 
     /// Export as PNG
     #[wasm_bindgen]
-    pub fn export_png(&self, grid: &AsciiGrid) -> Vec<u8> {
+    pub fn export_png(&self, grid: &AsciiGrid) -> Result<Vec<u8>, JsValue> {
         let rgba = grid.rgba().unwrap_or_default();
-        let cols = grid.cols();
-        let rows = grid.rows();
-        export::png::export_png(&rgba, cols * 8, rows * 8)
+        let width_px = grid.width_px();
+        let height_px = grid.height_px();
+        export::png::export_png(&rgba, width_px, height_px)
     }
 
     /// Export as WebP
     #[wasm_bindgen]
-    pub fn export_webp(&self, grid: &AsciiGrid, quality: f32, lossless: bool) -> Vec<u8> {
+    pub fn export_webp(&self, grid: &AsciiGrid, quality: f32, lossless: bool) -> Result<Vec<u8>, JsValue> {
         let rgba = grid.rgba().unwrap_or_default();
-        let cols = grid.cols();
-        let rows = grid.rows();
-        export::webp::export_webp(&rgba, cols * 8, rows * 8, quality, lossless)
+        let width_px = grid.width_px();
+        let height_px = grid.height_px();
+        export::webp::export_webp(&rgba, width_px, height_px, quality, lossless)
     }
 
     /// Export as plain text
@@ -126,7 +161,7 @@ impl UnsciiConverter {
         export::text::export_text(&grid.data(), cols, rows)
     }
 
-    /// Export as HTML
+    /// Export as HTML with embedded font (base64 WOFF)
     #[wasm_bindgen]
     pub fn export_html(
         &self,
@@ -139,7 +174,13 @@ impl UnsciiConverter {
     ) -> String {
         let cols = grid.cols();
         let rows = grid.rows();
-        export::html::export_html(&grid.data(), cols, rows, fg_color, bg_color, font_family, line_height, font_size)
+        // Get font variant name for the title
+        export::html::export_html(
+            &grid.data(), cols, rows,
+            fg_color, bg_color, font_family,
+            line_height, font_size,
+            self.font_variant
+        )
     }
 
     /// Export as ANSI escape codes
@@ -148,18 +189,5 @@ impl UnsciiConverter {
         let cols = grid.cols();
         let rows = grid.rows();
         export::ansi::export_ansi(&grid.data(), cols, rows, fg_rgb, bg_rgb)
-    }
-
-    /// Get frames for GIF animation (returns Vec<JsValue> of RGBA frames)
-    #[wasm_bindgen]
-    pub fn get_gif_frames(
-        &self,
-        grids: Vec<AsciiGrid>,
-        _palette: &[u32],
-    ) -> Vec<JsValue> {
-        grids.iter().map(|grid| {
-            let rgba = grid.rgba().unwrap_or_else(|| vec![0; (grid.cols() * 8 * grid.rows() * 8 * 4) as usize]);
-            JsValue::from(rgba)
-        }).collect()
     }
 }

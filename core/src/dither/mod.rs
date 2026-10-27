@@ -9,7 +9,6 @@ pub mod palette;
 
 use crate::dither::error_diffusion::*;
 use crate::dither::ordered::*;
-use crate::dither::palette::*;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]

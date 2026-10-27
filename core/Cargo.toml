@@ -15,15 +15,6 @@ name = "unscii_converter_core"
 [dependencies]
 # WASM bindings
 wasm-bindgen = { version = "0.2", features = ["serde-serialize"] }
-web-sys = { version = "0.3", features = [
-    "HtmlCanvasElement",
-    "WebGl2RenderingContext",
-    "ImageData",
-    "FileReader",
-    "Blob",
-    "console",
-] }
-js-sys = "0.3"
 console_error_panic_hook = { version = "0.1", optional = true }
 
 # Image processing
@@ -38,8 +29,8 @@ zenwebp = { version = "0.4", optional = true }
 # Utilities
 hex = "0.4"
 thiserror = "1.0"
-bitflags = "2.0"
 png = "0.18"
+gamut-exif = "2.0"
 
 [dev-dependencies]
 
@@ -54,10 +45,6 @@ panic = "abort"
 strip = true
 overflow-checks = false
 debug = false
-
-[profile.release.with-debug]
-inherits = "release"
-debug = true
 
 [features]
 default = ["console_error_panic_hook", "webp"]

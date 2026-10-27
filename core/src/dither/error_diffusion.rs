@@ -1,9 +1,5 @@
 //! Error diffusion dithering algorithms (CPU-only, sequential)
 
-use crate::dither::DitherAlgorithm;
-
-fn clamp_u8(v: i32) -> u8 { v.clamp(0, 255) as u8 }
-
 /// Floyd-Steinberg (1976) - classic error diffusion
 /// Weights: 7/16, 3/16, 5/16, 1/16
 pub fn floyd_steinberg(luma: &[u8], dithered_out: &mut [u8], width: u32, height: u32, strength: f32, threshold: f32) {
@@ -48,7 +44,6 @@ pub fn floyd_steinberg(luma: &[u8], dithered_out: &mut [u8], width: u32, height:
     
     // Apply strength: blend between original luma and dithered
     if strength < 1.0 {
-        let thresh_val = (threshold * 255.0) as u8;
         for i in 0..luma.len() {
             let dithered = dithered_out[i] as u32;
             let original = luma[i] as u32;
@@ -94,7 +89,6 @@ pub fn atkinson(luma: &[u8], dithered_out: &mut [u8], width: u32, height: u32, s
     
     // Apply strength: blend between original luma and dithered
     if strength < 1.0 {
-        let thresh_val = (threshold * 255.0) as u8;
         for i in 0..luma.len() {
             let dithered = dithered_out[i] as u32;
             let original = luma[i] as u32;
@@ -147,7 +141,6 @@ pub fn sierra(luma: &[u8], dithered_out: &mut [u8], width: u32, height: u32, str
     
     // Apply strength: blend between original luma and dithered
     if strength < 1.0 {
-        let thresh_val = (threshold * 255.0) as u8;
         for i in 0..luma.len() {
             let dithered = dithered_out[i] as u32;
             let original = luma[i] as u32;
@@ -202,7 +195,6 @@ pub fn jarvis_judice_ninke(luma: &[u8], dithered_out: &mut [u8], width: u32, hei
     
     // Apply strength: blend between original luma and dithered
     if strength < 1.0 {
-        let thresh_val = (threshold * 255.0) as u8;
         for i in 0..luma.len() {
             let dithered = dithered_out[i] as u32;
             let original = luma[i] as u32;
@@ -257,7 +249,6 @@ pub fn stucki(luma: &[u8], dithered_out: &mut [u8], width: u32, height: u32, str
     
     // Apply strength: blend between original luma and dithered
     if strength < 1.0 {
-        let thresh_val = (threshold * 255.0) as u8;
         for i in 0..luma.len() {
             let dithered = dithered_out[i] as u32;
             let original = luma[i] as u32;
@@ -305,7 +296,6 @@ pub fn burkes(luma: &[u8], dithered_out: &mut [u8], width: u32, height: u32, str
     
     // Apply strength: blend between original luma and dithered
     if strength < 1.0 {
-        let thresh_val = (threshold * 255.0) as u8;
         for i in 0..luma.len() {
             let dithered = dithered_out[i] as u32;
             let original = luma[i] as u32;
@@ -313,10 +303,6 @@ pub fn burkes(luma: &[u8], dithered_out: &mut [u8], width: u32, height: u32, str
             dithered_out[i] = blended as u8;
         }
     }
-}
-
-fn lerp(old: i32, new: i32, strength: f32) -> u8 {
-    ((old as f32 * (1.0 - strength) + new as f32 * strength).round() as i32).clamp(0, 255) as u8
 }
 
 #[cfg(test)]
@@ -410,17 +396,7 @@ mod tests {
         assert!(dithered.iter().all(|&v| v == 0 || v == 255));
     }
 
-    #[test]
-    fn test_lerp() {
-        assert_eq!(lerp(100, 200, 0.0), 100);
-        assert_eq!(lerp(100, 200, 1.0), 200);
-        assert_eq!(lerp(100, 200, 0.5), 150);
-        assert_eq!(lerp(0, 255, 0.5), 128);
-    }
+    
 
-    #[test]
-    fn test_lerp_clamp() {
-        assert_eq!(lerp(0, 255, 2.0), 255);
-        assert_eq!(lerp(255, 0, 2.0), 0);
-    }
+    
 }

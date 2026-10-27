@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/solid';
+import { render, screen, fireEvent } from '@solidjs/testing-library';
 import FileDrop from '../components/FileDrop';
 
 describe('FileDrop', () => {
@@ -34,7 +34,9 @@ describe('FileDrop', () => {
     const file = new File(['test'], 'test.png', { type: 'image/png' });
     const dataTransfer = { files: [file] };
     
-    fireEvent.drop(screen.getByRole('button'), { dataTransfer });
+    // Drop zone is the div with class file-drop
+    const dropZone = screen.getByText('Drop an image here or click to browse').closest('.file-drop');
+    fireEvent.drop(dropZone, { dataTransfer });
     
     expect(defaultProps.onLoad).toHaveBeenCalledWith(file);
   });
@@ -43,7 +45,7 @@ describe('FileDrop', () => {
     render(() => <FileDrop {...defaultProps} />);
     
     const file = new File(['test'], 'test.jpg', { type: 'image/jpeg' });
-    const input = screen.getByLabelText('Drop an image here or click to browse').querySelector('input') as HTMLInputElement;
+    const input = screen.getByTestId('file-input') as HTMLInputElement;
     
     Object.defineProperty(input, 'files', { value: [file] });
     fireEvent.change(input);
@@ -57,7 +59,8 @@ describe('FileDrop', () => {
     const file = new File(['test'], 'test.txt', { type: 'text/plain' });
     const dataTransfer = { files: [file] };
     
-    fireEvent.drop(screen.getByRole('button'), { dataTransfer });
+    const dropZone = screen.getByText('Drop an image here or click to browse').closest('.file-drop');
+    fireEvent.drop(dropZone, { dataTransfer });
     
     expect(defaultProps.onLoad).not.toHaveBeenCalled();
   });
@@ -65,7 +68,7 @@ describe('FileDrop', () => {
   it('adds drag-over class on dragover', () => {
     render(() => <FileDrop {...defaultProps} />);
     
-    const dropZone = screen.getByRole('button');
+    const dropZone = screen.getByText('Drop an image here or click to browse').closest('.file-drop');
     fireEvent.dragOver(dropZone);
     
     expect(dropZone).toHaveClass('drag-over');
@@ -74,7 +77,7 @@ describe('FileDrop', () => {
   it('removes drag-over class on dragleave', () => {
     render(() => <FileDrop {...defaultProps} />);
     
-    const dropZone = screen.getByRole('button');
+    const dropZone = screen.getByText('Drop an image here or click to browse').closest('.file-drop');
     fireEvent.dragOver(dropZone);
     fireEvent.dragLeave(dropZone);
     
@@ -92,7 +95,7 @@ describe('FileDrop', () => {
   it('disables input when disabled', () => {
     render(() => <FileDrop {...defaultProps} disabled={true} />);
     
-    const input = screen.getByLabelText('Drop an image here or click to browse').querySelector('input') as HTMLInputElement;
+    const input = screen.getByTestId('file-input') as HTMLInputElement;
     expect(input).toBeDisabled();
   });
 });

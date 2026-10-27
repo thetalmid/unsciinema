@@ -8,6 +8,8 @@ pub struct AsciiGrid {
     data: Vec<u16>,
     cols: u32,
     rows: u32,
+    glyph_width: u32,
+    glyph_height: u32,
     rgba: Option<Vec<u8>>,
 }
 
@@ -19,8 +21,17 @@ impl AsciiGrid {
             data: vec![0; (cols * rows) as usize],
             cols,
             rows,
+            glyph_width: 8,
+            glyph_height: 8,
             rgba: None,
         }
+    }
+
+    #[wasm_bindgen]
+    pub fn with_glyph_size(mut self, glyph_width: u32, glyph_height: u32) -> AsciiGrid {
+        self.glyph_width = glyph_width;
+        self.glyph_height = glyph_height;
+        self
     }
 
     pub fn cols(&self) -> u32 { self.cols }
@@ -47,8 +58,10 @@ impl AsciiGrid {
 
     pub fn rgba(&self) -> Option<Vec<u8>> { self.rgba.clone() }
 
-    pub fn width_px(&self) -> u32 { self.cols * 8 }
-    pub fn height_px(&self) -> u32 { self.rows * 8 }
+    pub fn glyph_width(&self) -> u32 { self.glyph_width }
+    pub fn glyph_height(&self) -> u32 { self.glyph_height }
+    pub fn width_px(&self) -> u32 { self.cols * self.glyph_width }
+    pub fn height_px(&self) -> u32 { self.rows * self.glyph_height }
 }
 
 impl AsciiGrid {

@@ -52,7 +52,6 @@ pub fn bayer_ordered(luma: &[u8], dithered_out: &mut [u8], width: u32, height: u
     
     // Apply strength: blend between original luma and dithered
     if strength < 1.0 {
-        let thresh_val = (threshold * 255.0) as u8;
         for i in 0..luma.len() {
             let dithered = dithered_out[i] as u32;
             let original = luma[i] as u32;
@@ -100,10 +99,9 @@ pub fn blue_noise(luma: &[u8], dithered_out: &mut [u8], width: u32, height: u32,
             dithered_out[idx] = dithered;
         }
     }
-    
+
     // Apply strength: blend between original luma and dithered
     if strength < 1.0 {
-        let thresh_val = (threshold * 255.0) as u8;
         for i in 0..luma.len() {
             let dithered = dithered_out[i] as u32;
             let original = luma[i] as u32;
@@ -111,10 +109,6 @@ pub fn blue_noise(luma: &[u8], dithered_out: &mut [u8], width: u32, height: u32,
             dithered_out[i] = blended as u8;
         }
     }
-}
-
-fn lerp(a: f32, b: f32, t: f32) -> f32 {
-    a * (1.0 - t) + b * t
 }
 
 #[cfg(test)]
@@ -219,11 +213,5 @@ mod tests {
         assert_eq!(dithered1, dithered2);
     }
 
-    #[test]
-    fn test_lerp() {
-        assert!((lerp(0.0, 100.0, 0.0) - 0.0).abs() < f32::EPSILON);
-        assert!((lerp(0.0, 100.0, 1.0) - 100.0).abs() < f32::EPSILON);
-        assert!((lerp(0.0, 100.0, 0.5) - 50.0).abs() < f32::EPSILON);
-        assert!((lerp(100.0, 0.0, 0.5) - 50.0).abs() < f32::EPSILON);
-    }
+    
 }

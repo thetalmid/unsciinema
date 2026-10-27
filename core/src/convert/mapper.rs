@@ -1,7 +1,5 @@
 //! Map luminance values to glyph indices
 
-use crate::font::atlas::FontAtlas;
-
 /// Map luma buffer to glyph indices based on density
 /// Uses average of all pixels in each cell for better quality
 pub fn map_luma_to_glyphs(

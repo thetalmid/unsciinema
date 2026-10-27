@@ -1,5 +1,5 @@
 // Vitest setup for SolidJS testing
-import { cleanup } from 'solid-js/web';
+import { cleanup } from '@solidjs/testing-library';
 import { afterEach, vi } from 'vitest';
 
 // Mock WebGL2

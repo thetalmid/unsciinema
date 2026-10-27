@@ -182,14 +182,6 @@ export function useWebGL() {
     }
   };
 
-  const uploadAtlas = (atlasData: Uint8Array, atlasWidth: number, atlasHeight: number) => {
-    const { gl, textures } = state();
-    if (!gl || !textures.atlas) return;
-    gl.bindTexture(gl.TEXTURE_2D, textures.atlas);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, atlasWidth, atlasHeight, 0, gl.RGBA, gl.UNSIGNED_BYTE, atlasData);
-    gl.bindTexture(gl.TEXTURE_2D, null);
-  };
-
   const renderFrame = (grid: any, glyphWidth: number = 8, glyphHeight: number = 8) => {
     const { gl, program, vao, textures, uniformLocations } = state();
     const el = canvas();
@@ -237,5 +229,5 @@ export function useWebGL() {
 
   const glMemo = createMemo(() => state().gl);
 
-  return { canvasRef, renderFrame, resizeCanvas, gl: glMemo, error, uploadAtlas };
+  return { canvasRef, renderFrame, resizeCanvas, gl: glMemo, error };
 }

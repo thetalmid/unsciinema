@@ -38,7 +38,6 @@ wasm-bindgen.zip
 
 # Rust
 core/target/
-**/Cargo.lock
 
 # Misc
 *.orig

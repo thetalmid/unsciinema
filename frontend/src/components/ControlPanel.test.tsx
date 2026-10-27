@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/solid';
+import { render, screen, fireEvent } from '@solidjs/testing-library';
 import ControlPanel from '../components/ControlPanel';
 
 describe('ControlPanel', () => {
@@ -13,14 +13,9 @@ describe('ControlPanel', () => {
       colorMode: 0,
       palette: [0x000000FF, 0xFFFFFFFF, 0, 0, 0, 0],
       paletteSize: 2,
-      alphaMode: 0,
       contrast: 1.0,
       gamma: 1.0,
       targetWidth: 0,
-      crtScanlines: false,
-      crtCurvature: 0.0,
-      crtBloom: 0.0,
-      crtVignette: 0.0,
     },
     setParams: vi.fn(),
     onConvert: vi.fn(),
@@ -64,9 +59,11 @@ describe('ControlPanel', () => {
     fireEvent.click(screen.getByText('Render'));
     
     expect(screen.getByLabelText('Color Mode')).toBeInTheDocument();
-    expect(screen.getByLabelText('Alpha Mode')).toBeInTheDocument();
     expect(screen.getByLabelText('Contrast: 1.00')).toBeInTheDocument();
     expect(screen.getByLabelText('Gamma: 1.00')).toBeInTheDocument();
+    // Alpha Mode and CRT controls removed per audit
+    expect(screen.queryByLabelText('Alpha Mode')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Scanlines')).not.toBeInTheDocument();
   });
 
   it('shows color controls on Color tab', () => {
@@ -74,18 +71,22 @@ describe('ControlPanel', () => {
     fireEvent.click(screen.getByText('Color'));
     
     expect(screen.getByText('Preset Palettes')).toBeInTheDocument();
-    expect(screen.getByLabelText('Palette Size: 2')).toBeInTheDocument();
+    // Palette Size only shows in Palette color mode
+    expect(screen.queryByLabelText('Palette Size: 2')).not.toBeInTheDocument();
   });
 
   it('shows advanced controls on Advanced tab', () => {
     render(() => <ControlPanel {...defaultProps} />);
     fireEvent.click(screen.getByText('Advanced'));
     
-    expect(screen.getByLabelText('Scanlines')).toBeInTheDocument();
-    expect(screen.getByLabelText('Curvature: 0.00')).toBeInTheDocument();
-    expect(screen.getByLabelText('Bloom: 0.00')).toBeInTheDocument();
-    expect(screen.getByLabelText('Vignette: 0.00')).toBeInTheDocument();
-    expect(screen.getByLabelText('Target Width: Auto')).toBeInTheDocument();
+    // Accessible name is 'Target Width: Autopx' (no space before px)
+    expect(screen.getByLabelText('Target Width: Autopx')).toBeInTheDocument();
+    expect(screen.getByRole('slider', { name: 'Target Width: Autopx' })).toBeInTheDocument();
+    // CRT controls removed per audit
+    expect(screen.queryByLabelText('Scanlines')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Curvature')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Bloom')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Vignette')).not.toBeInTheDocument();
   });
 
   it('calls onConvert when Convert button clicked', () => {

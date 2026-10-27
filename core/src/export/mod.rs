@@ -5,6 +5,7 @@ pub mod webp;
 pub mod text;
 pub mod html;
 pub mod ansi;
+pub mod fonts;
 
 use crate::export::png::export_png;
 use crate::export::webp::export_webp;
@@ -23,12 +24,28 @@ pub fn export_all(
     let cols = grid.cols();
     let rows = grid.rows();
     let grid_data = grid.data();
+    let width_px = grid.width_px();
+    let height_px = grid.height_px();
     
     Ok(JsExportResult {
-        png: export_png(&rgba, cols * 8, rows * 8),
-        webp: export_webp(&rgba, cols * 8, rows * 8, params.webp_quality, params.webp_lossless),
+        png: export_png(&rgba, width_px, height_px)?,
+        webp: export_webp(&rgba, width_px, height_px, params.webp_quality, params.webp_lossless)?,
         text: export_text(&grid_data, cols, rows),
-        html: export_html(&grid_data, cols, rows, &params.html_fg, &params.html_bg, &params.html_font, params.html_line_height, params.html_font_size),
+        html: export_html(
+            &grid_data, cols, rows,
+            &params.html_fg, &params.html_bg, &params.html_font,
+            params.html_line_height, params.html_font_size,
+            match params.html_font_variant {
+                0 => crate::font::variants::FontVariant::Unscii8,
+                1 => crate::font::variants::FontVariant::Unscii8Alt,
+                2 => crate::font::variants::FontVariant::Unscii8Fantasy,
+                3 => crate::font::variants::FontVariant::Unscii8Mcr,
+                4 => crate::font::variants::FontVariant::Unscii8Tall,
+                5 => crate::font::variants::FontVariant::Unscii8Thin,
+                6 => crate::font::variants::FontVariant::Unscii16,
+                _ => crate::font::variants::FontVariant::Unscii8,
+            }
+        ),
         ansi: export_ansi(&grid_data, cols, rows, params.ansi_fg, params.ansi_bg),
     })
 }
@@ -46,6 +63,7 @@ pub struct ExportParams {
     pub html_font: String,
     pub html_line_height: f32,
     pub html_font_size: u32,
+    pub html_font_variant: u32,  // FontVariant discriminant
     pub ansi_fg: u32,
     pub ansi_bg: u32,
 }
@@ -60,6 +78,7 @@ impl Default for ExportParams {
             html_font: "'Unscii', monospace".to_string(),
             html_line_height: 1.1,
             html_font_size: 12,
+            html_font_variant: 0,  // FontVariant::Unscii8
             ansi_fg: 0xFFFFFFFF,
             ansi_bg: 0x000000FF,
         }
@@ -103,16 +122,6 @@ impl JsExportResult {
     pub fn ansi(&self) -> String {
         self.ansi.clone()
     }
-}
-
-// Internal export result (not exposed to WASM)
-#[derive(Clone, Debug)]
-pub struct ExportResult {
-    pub png: Vec<u8>,
-    pub webp: Vec<u8>,
-    pub text: String,
-    pub html: String,
-    pub ansi: String,
 }
 
 #[cfg(test)]
