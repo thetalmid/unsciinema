@@ -93,7 +93,7 @@ fn render_grid_to_rgba(
             // Render glyph
             for gy in 0..glyph_h {
                 for gx in 0..glyph_w {
-                    let atlas_idx = ((glyph_idx * glyph_w as usize + gx as usize) * 4) as usize;
+                    let atlas_idx = ((gy as usize * font_atlas.width as usize + glyph_idx as usize * glyph_w as usize + gx as usize) * 4) as usize;
                     let ink = font_atlas.data[atlas_idx] > 128;
                     
                     let out_x = col * glyph_w + gx;
