@@ -27,7 +27,7 @@ js-sys = "0.3"
 console_error_panic_hook = { version = "0.1", optional = true }
 
 # Image processing
-image = { version = "0.25", features = ["png", "jpeg", "gif", "bmp", "tiff", "pnm", "qoi", "dds", "tga", "hdr"], default-features = false }
+image = { version = "0.25", features = ["png", "jpeg", "gif", "bmp", "tiff", "pnm", "qoi", "dds", "tga", "hdr", "webp"], default-features = false }
 
 # WebP - pure Rust, WASM SIMD128 compatible
 zenwebp = { version = "0.4", optional = true }
