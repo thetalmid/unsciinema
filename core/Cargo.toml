@@ -1,0 +1,68 @@
+[package]
+name = "unscii-converter-core"
+version = "0.1.0"
+edition = "2021"
+description = "Core image-to-ASCII conversion logic for unscii font, compiled to WebAssembly"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/yourusername/unscii-converter"
+categories = ["wasm", "image-processing", "graphics"]
+keywords = ["ascii", "unscii", "dithering", "webassembly"]
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+name = "unscii_converter_core"
+
+[dependencies]
+# WASM bindings
+wasm-bindgen = { version = "0.2", features = ["serde-serialize"] }
+web-sys = { version = "0.3", features = [
+    "HtmlCanvasElement",
+    "WebGl2RenderingContext",
+    "ImageData",
+    "FileReader",
+    "Blob",
+    "console",
+] }
+js-sys = "0.3"
+console_error_panic_hook = { version = "0.1", optional = true }
+
+# Image processing
+image = { version = "0.25", features = ["png", "jpeg", "gif", "bmp", "tiff", "pnm", "qoi", "dds", "tga", "hdr"], default-features = false }
+
+# WebP - pure Rust, WASM SIMD128 compatible
+zenwebp = { version = "0.4", optional = true }
+
+# GIF - we'll use gifski-wasm from JS side, but keep gifski-lite as option
+# gifski-lite = "1.0"
+
+# Utilities
+hex = "0.4"
+thiserror = "1.0"
+bitflags = "2.0"
+png = "0.18"
+
+[dev-dependencies]
+
+[target.'cfg(target_arch = "wasm32")'.dev-dependencies]
+wasm-bindgen-test = "0.3"
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+overflow-checks = false
+debug = false
+
+[profile.release.with-debug]
+inherits = "release"
+debug = true
+
+[features]
+default = ["console_error_panic_hook", "webp"]
+console_error_panic_hook = ["dep:console_error_panic_hook"]
+webp = ["zenwebp"]
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false

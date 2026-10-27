@@ -1,0 +1,29 @@
+{
+  "name": "unscii-converter-frontend",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "npm run build:wasm && vite build",
+    "build:wasm": "cd ../core && wasm-pack build --target web --out-dir ../frontend/pkg --release",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "solid-js": "^1.9.0",
+    "unscii-converter-core": "file:./pkg"
+  },
+  "devDependencies": {
+    "vite": "^5.4.0",
+    "vite-plugin-solid": "^2.10.0",
+    "vite-plugin-wasm": "^3.4.0",
+    "typescript": "^5.5.0",
+    "vitest": "^2.0.0",
+    "@testing-library/jest-dom": "^6.4.0",
+    "@vitest/coverage-v8": "^2.0.0",
+    "jsdom": "^24.0.0"
+  }
+}

@@ -1,0 +1,107 @@
+//! Dithering algorithms
+//!
+//! Error diffusion (CPU): Floyd-Steinberg, Atkinson, Sierra, JJN, Stucki, Burkes
+//! Ordered (GPU-friendly): Bayer 4x4, Bayer 8x8, Blue Noise
+
+pub mod error_diffusion;
+pub mod ordered;
+pub mod palette;
+
+use crate::dither::error_diffusion::*;
+use crate::dither::ordered::*;
+use crate::dither::palette::*;
+use wasm_bindgen::prelude::*;
+
+#[wasm_bindgen]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum DitherAlgorithm {
+    None = 0,
+    FloydSteinberg = 1,
+    Atkinson = 2,
+    Bayer4 = 3,
+    Bayer8 = 4,
+    BlueNoise = 5,
+    Sierra = 6,
+    JarvisJudiceNinke = 7,
+    Stucki = 8,
+    Burkes = 9,
+}
+
+impl From<u32> for DitherAlgorithm {
+    fn from(value: u32) -> Self {
+        match value {
+            0 => DitherAlgorithm::None,
+            1 => DitherAlgorithm::FloydSteinberg,
+            2 => DitherAlgorithm::Atkinson,
+            3 => DitherAlgorithm::Bayer4,
+            4 => DitherAlgorithm::Bayer8,
+            5 => DitherAlgorithm::BlueNoise,
+            6 => DitherAlgorithm::Sierra,
+            7 => DitherAlgorithm::JarvisJudiceNinke,
+            8 => DitherAlgorithm::Stucki,
+            9 => DitherAlgorithm::Burkes,
+            _ => DitherAlgorithm::None,
+        }
+    }
+}
+
+/// Apply dithering to luma buffer
+/// 
+/// The `threshold` parameter (0.0-1.0) adjusts the quantization threshold.
+/// The `strength` parameter (0.0-1.0) controls the dithering intensity.
+/// 
+/// For error diffusion: threshold shifts the quantization point
+/// For ordered dithering: threshold is added to the matrix threshold
+pub fn apply_dither(
+    luma: &mut [u8],
+    width: u32,
+    height: u32,
+    algorithm: u32,
+    strength: f32,
+    threshold: f32,
+    _palette: &[u32], // Palette is used during export, not here
+) {
+    let algorithm = DitherAlgorithm::from(algorithm);
+    match algorithm {
+        DitherAlgorithm::None => {},
+        DitherAlgorithm::FloydSteinberg => floyd_steinberg(luma, width, height, strength, threshold),
+        DitherAlgorithm::Atkinson => atkinson(luma, width, height, strength, threshold),
+        DitherAlgorithm::Sierra => sierra(luma, width, height, strength, threshold),
+        DitherAlgorithm::JarvisJudiceNinke => jarvis_judice_ninke(luma, width, height, strength, threshold),
+        DitherAlgorithm::Stucki => stucki(luma, width, height, strength, threshold),
+        DitherAlgorithm::Burkes => burkes(luma, width, height, strength, threshold),
+        DitherAlgorithm::Bayer4 => bayer_ordered(luma, width, height, strength, threshold, 4),
+        DitherAlgorithm::Bayer8 => bayer_ordered(luma, width, height, strength, threshold, 8),
+        DitherAlgorithm::BlueNoise => blue_noise(luma, width, height, strength, threshold),
+    }
+    
+    // Palette mapping is handled during export/rendering, not here
+    // This keeps luma as grayscale for proper glyph density mapping
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_no_dither() {
+        let mut luma = vec![100, 150, 200];
+        apply_dither(&mut luma, 1, 3, 0, 1.0, 0.5, &[]);
+        assert_eq!(luma, vec![100, 150, 200]);
+    }
+
+    #[test]
+    fn test_from_u32() {
+        assert_eq!(DitherAlgorithm::from(0), DitherAlgorithm::None);
+        assert_eq!(DitherAlgorithm::from(1), DitherAlgorithm::FloydSteinberg);
+        assert_eq!(DitherAlgorithm::from(2), DitherAlgorithm::Atkinson);
+        assert_eq!(DitherAlgorithm::from(3), DitherAlgorithm::Bayer4);
+        assert_eq!(DitherAlgorithm::from(4), DitherAlgorithm::Bayer8);
+        assert_eq!(DitherAlgorithm::from(5), DitherAlgorithm::BlueNoise);
+        assert_eq!(DitherAlgorithm::from(6), DitherAlgorithm::Sierra);
+        assert_eq!(DitherAlgorithm::from(7), DitherAlgorithm::JarvisJudiceNinke);
+        assert_eq!(DitherAlgorithm::from(8), DitherAlgorithm::Stucki);
+        assert_eq!(DitherAlgorithm::from(9), DitherAlgorithm::Burkes);
+        assert_eq!(DitherAlgorithm::from(10), DitherAlgorithm::None);
+    }
+}

@@ -1,0 +1,47 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+
+# Build outputs
+dist/
+build/
+*.wasm
+
+# WASM pkg (generated)
+frontend/pkg/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Test coverage
+coverage/
+
+# WASM bindgen cache
+wasm-bindgen.tar.gz
+wasm-bindgen.zip
+
+# Rust
+core/target/
+**/Cargo.lock
+
+# Misc
+*.orig
+*.bak
+*.tmp
+*.temp
