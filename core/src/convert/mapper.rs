@@ -3,6 +3,7 @@
 use crate::font::atlas::FontAtlas;
 
 /// Map luma buffer to glyph indices based on density
+/// Uses average of all pixels in each cell for better quality
 pub fn map_luma_to_glyphs(
     luma: &[u8],
     width: u32,
@@ -22,13 +23,28 @@ pub fn map_luma_to_glyphs(
     
     for row in 0..rows {
         for col in 0..cols {
-            let cx = ((col as f32 + 0.5) * cell_size) as u32;
-            let cy = ((row as f32 + 0.5) * cell_size) as u32;
-            let cx = cx.min(width - 1);
-            let cy = cy.min(height - 1);
+            // Compute cell bounds in source image
+            let cell_x0 = (col as f32 * cell_size) as u32;
+            let cell_y0 = (row as f32 * cell_size) as u32;
+            let cell_x1 = ((col as f32 + 1.0) * cell_size).floor() as u32;
+            let cell_y1 = ((row as f32 + 1.0) * cell_size).floor() as u32;
             
-            let idx = (cy * width + cx) as usize;
-            let luma_val = luma[idx] as f32 / 255.0;
+            let cell_x1 = cell_x1.min(width);
+            let cell_y1 = cell_y1.min(height);
+            
+            // Average all pixels in the cell
+            let mut sum = 0u32;
+            let mut count = 0u32;
+            for cy in cell_y0..cell_y1 {
+                for cx in cell_x0..cell_x1 {
+                    let idx = (cy * width + cx) as usize;
+                    sum += luma[idx] as u32;
+                    count += 1;
+                }
+            }
+            
+            let avg_luma = if count > 0 { sum / count } else { 0 };
+            let luma_val = avg_luma as f32 / 255.0;
             
             let glyph_idx = if luma_val < threshold {
                 0u16  // Below threshold -> space (sparse)
@@ -149,13 +165,34 @@ mod tests {
 
     #[test]
     fn test_map_luma_gradient() {
-        // Create gradient from black to white
+        // Create gradient from black to white (8x8)
         let mut luma = Vec::with_capacity(64);
         for i in 0..64 {
             luma.push((i * 4) as u8); // 0, 4, 8, ... 252
         }
         let grid = map_luma_to_glyphs(&luma, 8, 8, 8.0, 0.0).unwrap();
-        // Center pixel (4,4) -> index 36 -> luma=144 -> glyph 8
-        assert_eq!(grid.get(0, 0), 8);
+        // Average of gradient -> ~127 -> glyph 7 or 8
+        assert!(grid.get(0, 0) >= 7 && grid.get(0, 0) <= 9);
+    }
+
+    #[test]
+    fn test_map_luma_cell_average() {
+        // 16x16, cell_size=8 -> 2x2 grid
+        // Top-left quadrant white (255), rest black (0)
+        let mut luma = vec![0u8; 256];
+        for y in 0..8 {
+            for x in 0..8 {
+                luma[(y * 16 + x) as usize] = 255;
+            }
+        }
+        let grid = map_luma_to_glyphs(&luma, 16, 16, 8.0, 0.5).unwrap();
+        assert_eq!(grid.cols(), 2);
+        assert_eq!(grid.rows(), 2);
+        // Top-left cell average = 255 -> glyph 15
+        assert_eq!(grid.get(0, 0), 15);
+        // Other cells average = 0 -> glyph 0
+        assert_eq!(grid.get(1, 0), 0);
+        assert_eq!(grid.get(0, 1), 0);
+        assert_eq!(grid.get(1, 1), 0);
     }
 }

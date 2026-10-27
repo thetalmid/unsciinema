@@ -8,7 +8,7 @@ pub use crate::convert::grid::AsciiGrid;
 use crate::convert::grid::AsciiGrid as _;
 use crate::font::atlas::FontAtlas;
 use crate::font::variants::FontVariant;
-use crate::dither::{apply_dither, DitherAlgorithm};
+use crate::dither::apply_dither;
 use crate::image::ImageProcessor;
 use wasm_bindgen::prelude::*;
 
@@ -27,24 +27,25 @@ pub fn convert_image(
     }
     
     // Get luma buffer
-    let mut luma = processor.luma();
+    let luma = processor.luma();
     let width = processor.width();
     let height = processor.height();
     
-    // Apply dithering
+    // Apply dithering (output to separate buffer)
+    let mut dithered = vec![0u8; (width * height) as usize];
     apply_dither(
-        &mut luma,
+        &luma,
+        &mut dithered,
         width,
         height,
         params.dither_algorithm,
         params.dither_strength,
         params.threshold,
-        &params.palette,
     );
     
-    // Map to glyphs
+    // Map to glyphs using dithered buffer (now averages cell)
     let cell_size = params.cell_size.max(1.0);
-    let mut grid = map_luma_to_glyphs(&luma, width, height, cell_size, params.threshold)?;
+    let mut grid = map_luma_to_glyphs(&dithered, width, height, cell_size, params.threshold)?;
     
     // Render to RGBA for preview (using font atlas)
     let rgba = render_grid_to_rgba(&grid, font_atlas, cell_size, processor.rgba().as_slice(), width, height, params.color_mode, &params.palette, params.palette_size as usize)?;

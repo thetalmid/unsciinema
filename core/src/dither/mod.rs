@@ -45,38 +45,45 @@ impl From<u32> for DitherAlgorithm {
     }
 }
 
-/// Apply dithering to luma buffer
+/// Apply dithering to luma buffer, producing a binary (0/255) pattern in `dithered_out`.
 /// 
 /// The `threshold` parameter (0.0-1.0) adjusts the quantization threshold.
 /// The `strength` parameter (0.0-1.0) controls the dithering intensity.
 /// 
 /// For error diffusion: threshold shifts the quantization point
 /// For ordered dithering: threshold is added to the matrix threshold
+/// 
+/// The input `luma` is NOT modified. The binary dithered result is written to `dithered_out`.
+/// Both buffers must have the same length (width * height).
+#[wasm_bindgen]
 pub fn apply_dither(
-    luma: &mut [u8],
+    luma: &[u8],
+    dithered_out: &mut [u8],
     width: u32,
     height: u32,
     algorithm: u32,
     strength: f32,
     threshold: f32,
-    _palette: &[u32], // Palette is used during export, not here
 ) {
     let algorithm = DitherAlgorithm::from(algorithm);
     match algorithm {
-        DitherAlgorithm::None => {},
-        DitherAlgorithm::FloydSteinberg => floyd_steinberg(luma, width, height, strength, threshold),
-        DitherAlgorithm::Atkinson => atkinson(luma, width, height, strength, threshold),
-        DitherAlgorithm::Sierra => sierra(luma, width, height, strength, threshold),
-        DitherAlgorithm::JarvisJudiceNinke => jarvis_judice_ninke(luma, width, height, strength, threshold),
-        DitherAlgorithm::Stucki => stucki(luma, width, height, strength, threshold),
-        DitherAlgorithm::Burkes => burkes(luma, width, height, strength, threshold),
-        DitherAlgorithm::Bayer4 => bayer_ordered(luma, width, height, strength, threshold, 4),
-        DitherAlgorithm::Bayer8 => bayer_ordered(luma, width, height, strength, threshold, 8),
-        DitherAlgorithm::BlueNoise => blue_noise(luma, width, height, strength, threshold),
+        DitherAlgorithm::None => {
+            // No dithering: just threshold the luma
+            let thresh_val = (threshold * 255.0) as u8;
+            for i in 0..luma.len() {
+                dithered_out[i] = if luma[i] > thresh_val { 255 } else { 0 };
+            }
+        },
+        DitherAlgorithm::FloydSteinberg => floyd_steinberg(luma, dithered_out, width, height, strength, threshold),
+        DitherAlgorithm::Atkinson => atkinson(luma, dithered_out, width, height, strength, threshold),
+        DitherAlgorithm::Sierra => sierra(luma, dithered_out, width, height, strength, threshold),
+        DitherAlgorithm::JarvisJudiceNinke => jarvis_judice_ninke(luma, dithered_out, width, height, strength, threshold),
+        DitherAlgorithm::Stucki => stucki(luma, dithered_out, width, height, strength, threshold),
+        DitherAlgorithm::Burkes => burkes(luma, dithered_out, width, height, strength, threshold),
+        DitherAlgorithm::Bayer4 => bayer_ordered(luma, dithered_out, width, height, strength, threshold, 4),
+        DitherAlgorithm::Bayer8 => bayer_ordered(luma, dithered_out, width, height, strength, threshold, 8),
+        DitherAlgorithm::BlueNoise => blue_noise(luma, dithered_out, width, height, strength, threshold),
     }
-    
-    // Palette mapping is handled during export/rendering, not here
-    // This keeps luma as grayscale for proper glyph density mapping
 }
 
 #[cfg(test)]
@@ -85,9 +92,11 @@ mod tests {
 
     #[test]
     fn test_no_dither() {
-        let mut luma = vec![100, 150, 200];
-        apply_dither(&mut luma, 1, 3, 0, 1.0, 0.5, &[]);
-        assert_eq!(luma, vec![100, 150, 200]);
+        let luma = vec![100, 150, 200];
+        let mut dithered = vec![0; 3];
+        apply_dither(&luma, &mut dithered, 1, 3, 0, 1.0, 0.5);
+        // With no dithering, just thresholds
+        assert_eq!(dithered, vec![0, 255, 255]);
     }
 
     #[test]
