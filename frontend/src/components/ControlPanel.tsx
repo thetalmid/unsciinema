@@ -169,7 +169,7 @@ export default function ControlPanel(props: {
                     <input
                       key={i}
                       type="color"
-                      value={`#${(props.params.palette[i] >>> 0).toString(16).padStart(6, '0')}`}
+                      value={`#${(props.params.palette[i] >>> 8).toString(16).padStart(6, '0')}`}
                       onChange={e => {
                         const hex = e.currentTarget.value.slice(1);
                         const rgba = parseInt(hex + 'FF', 16);
