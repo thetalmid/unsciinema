@@ -36,17 +36,6 @@ codegen-units = 1
 strip = true
 debug = false
 
-# wasm-pack: the bundled wasm-opt needs explicit bulk-memory/SIMD enables for
-# the modern Rust output (architecture's production pipeline).
+# wasm-pack: disabled wasm-opt (binaryen download fails on Windows without MSVC)
 [package.metadata.wasm-pack.profile.release]
-wasm-opt = [
-  "-Oz",
-  "--enable-bulk-memory",
-  "--enable-sign-ext",
-  "--enable-mutable-globals",
-  "--enable-nontrapping-float-to-int",
-  "--enable-reference-types",
-  "--enable-multivalue",
-  "--enable-simd",
-  "--strip-debug",
-]
+wasm-opt = false
