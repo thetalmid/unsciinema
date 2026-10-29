@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!--
+      Tested CSP for the production build (see INTEGRATION.md §Security):
+      - 'wasm-unsafe-eval' only, never 'unsafe-eval': the WASM module needs it,
+        nothing else does.
+      - worker-src 'self': the converter worker is a same-origin chunk (module
+        worker), no blob: URLs are required by the built app.
+      - No COOP/COEP: the app is single-threaded and needs no cross-origin
+        isolation.
+      - Dev-only note: Vite's optional HMR preamble is an inline script that
+        this policy blocks (console CSP warning in `npm run dev`; the app
+        still runs). Production emits no inline scripts.
+      Static hosts should also serve the equivalent HTTP header
+      (frame-ancestors etc. cannot be set from a meta tag) — a copy lives in
+      public/_headers.
+    -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; media-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'none'"
+    />
+    <meta name="referrer" content="no-referrer" />
+    <meta
+      name="description"
+      content="Fully client-side Unscii bitmap-art image converter: Rust/WASM conversion, WebGL2 preview, GIF/PNG/WebP/HTML/text/ANSI export."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23101418'/%3E%3Ctext x='1' y='12' font-family='monospace' font-size='11' fill='%236ee7a8'%3EU%3C/text%3E%3C/svg%3E"
+    />
+    <title>Unsciinema — Unscii image converter</title>
+    <style>
+      /* Pre-hydration shell (inline boot styles are permitted by our own
+         style-src 'unsafe-inline' and keep first paint honest without any
+         external request). */
+      html,
+      body {
+        margin: 0;
+        background: #0b0e12;
+        color: #cdd6e0;
+        font-family: ui-monospace, "Cascadia Code", Menlo, Consolas, monospace;
+      }
+      #root:empty::before {
+        content: "Loading Unsciinema…";
+        display: block;
+        padding: 3rem 1.5rem;
+        color: #7b8794;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

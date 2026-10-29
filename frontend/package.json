@@ -1,0 +1,24 @@
+{
+  "name": "unsciinema-frontend",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "license": "MIT OR Apache-2.0",
+  "scripts": {
+    "wasm:build": "bash ../scripts/build-wasm.sh",
+    "dev": "vite",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@jsquash/webp": "1.5.0",
+    "@solidjs/web": "2.0.0-rc.19",
+    "solid-js": "2.0.0-rc.19"
+  },
+  "devDependencies": {
+    "@solidjs/vite-plugin": "3.0.0-next.52",
+    "typescript": "5.9.3",
+    "vite": "8.3.5"
+  }
+}
