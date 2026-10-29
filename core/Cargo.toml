@@ -1,0 +1,52 @@
+[package]
+name = "unsciinema-core"
+version = "1.0.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+description = "Unsciinema image-to-Unscii conversion core (Rust -> WASM)"
+repository = ""
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+wasm-bindgen = "0.2.129"
+# Decoding (content-sniffed PNG/JPEG/GIF/WebP stills; GIF animation is handled
+# by gif + gif-dispose below for correct disposal/loop metadata).
+image = { version = "0.25.10", default-features = false, features = ["png", "jpeg", "webp", "gif"] }
+# PNG encoding (salvaged fragment used the png crate directly).
+png = "0.18.1"
+# GIF decode/compositing/encode: MIT OR Apache-2.0 (gifski-wasm is AGPL and is
+# deliberately NOT used; zengif's default zenquant is AGPL and is not used).
+gif = "0.14.2"
+gif-dispose = "6.0.0"
+# NeuQuant quantizer for GIF frames: MIT.
+color_quant = "2.0.0"
+# EXIF orientation (JPEG/PNG/WebP containers): BSD-2-Clause.
+kamadak-exif = "0.6.1"
+hex = "0.4.3"
+thiserror = "2.0.21"
+console_error_panic_hook = "0.1"
+
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
+strip = true
+debug = false
+
+# wasm-pack: the bundled wasm-opt needs explicit bulk-memory/SIMD enables for
+# the modern Rust output (architecture's production pipeline).
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = [
+  "-Oz",
+  "--enable-bulk-memory",
+  "--enable-sign-ext",
+  "--enable-mutable-globals",
+  "--enable-nontrapping-float-to-int",
+  "--enable-reference-types",
+  "--enable-multivalue",
+  "--enable-simd",
+  "--strip-debug",
+]
