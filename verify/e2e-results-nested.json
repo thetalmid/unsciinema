@@ -1,0 +1,14 @@
+{
+  "target": "http://127.0.0.1:4174/nested/path/",
+  "pass": 115,
+  "fail": 0,
+  "glRenderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+  "convertMs48": 9,
+  "convertMs1M": 19,
+  "convertMs1Mwarm": 24.1,
+  "wasmContentType": "application/wasm",
+  "externalRequests": [],
+  "consoleErrors": [],
+  "pageErrors": [],
+  "cspViolations": []
+}
