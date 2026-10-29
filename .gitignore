@@ -1,0 +1,18 @@
+# Dependencies
+node_modules/
+
+# Build outputs (regenerate: npm run build / VITE_BASE=... npm run build)
+frontend/dist/
+frontend/dist-nested/
+frontend/src/generated/
+
+# Rust
+core/target/
+
+# Logs and editor/OS noise
+*.log
+*.tsbuildinfo
+*.swp
+*.swo
+*~
+.DS_Store
